@@ -1,0 +1,137 @@
+This is a solar monitoring system for Renogy (and Renogy clones)
+MPPT controllers.
+
+Make sure you are in group dialer to talk to your serial port and
+make sure your Renogy controller serial port is set up in .solar
+in your home dir or in /usr/local/etc/solar.conf
+See README.CONFIG for details.
+
+The C programs in this directory are sufficient to get data
+from the Renogy MPPT controller using serial MODBUS protocol.
+
+Optionally the remote and local can be set up on the same system.
+in which case local_snapshot is used in lieu of
+remote_snapshot and recv_snapshot is no longer needed.
+
+Makefile components * marks produced executable
+===============================================
+
+libmodbus.c	- This is a (RTU) MODBUS library.
+libmobus.h	-
+modbus_crc.c	- CRC part of libmodbus
+
+modbus_server.c	- This was used initially to do MODBUS debugging.
+		  It allows one to read and poke values from MODBUS.
+modbus_server.h	-
+
+
+libsolar.c	- Decodes raw data using libmodbus into structures
+		  which are then sent to host using remote_snapshot
+		  and used by the web_status web server.
+libsolar.h	-
+renogy.h	- Offsets for Renogy MPPT controllers
+
+config_parser.c	- Simple config parser for the 'C' programs
+		  mimics the config parser for python but does not
+		  need the [module] markers. Used by modbus_server,
+		  remote_snapshot, local_snapshot and web_status
+
+remote_snapshot.c - Reads values from MODBUS then sends them to host
+snapshot.h	- Shared by remote_snapshot.c local_snapshot.c and
+		  recv_snapshot.c
+
+web_status.c	- Simple HTTP only web server to give status of solar
+		  array.
+
+recv_snapshot.c	- The solar user is locked to run this program on login
+		  it then accepts one line of csv which it copies
+		  to a local text archive and adds to database.
+
+csv2database.c	- Takes defaults from global etc/solar.conf or ~/.solar
+		  and command line csvfile name converts these csv
+		  lines to database. Useful for cases where host has
+		  gone offline and is missing data from remote.
+
+local_snapshot.c - Only used if remote and host are the same machine
+
+update_database.c - Routines to talk to postgresql
+update_database.h -
+
+make remote produces executables
+================================
+
+modbus_server*
+remote_snapshot*
+web_status*
+
+make host produces executables
+==============================
+
+recv_snapshot*
+csv2database*
+
+make local produces executables
+===============================
+
+modbus_server*
+local_snapshot*
+web_status*
+
+On the remote:
+=============
+
+remote_snapshot runs via crontab on the remote collection machine.
+remote_snapshot then pushes data from remote machine to the host.
+
+On the remote (RPi ?) machine set up a solar account and share ssh
+keys for remote machine to ssh into host. eg. passwordless
+
+$ crontab -l
+MAILTO=""
+5,35 * * * * /usr/local/bin/remote_snapshot
+
+Which will push a snapshot of the solar statistics every 30 minutes
+at 5 and 35 past the hour. remote_snap keeps a local CSV file snapshot
+in case the main database machine is offline. The database may be
+reconstructed on the database machine from this file.
+
+modbus_server will be compiled on the remote collection side
+to talk to the modbus on the Renogy device. It is optional
+but For testing you can use modbus_server to retrieve values
+from your MPPT controller.
+
+eg.
+% ./modbus_server 
+> read 0xa 40
+1828 1400 2020 524E 472D 4354 524C 2D52 5652 3430 0001 0408 0000 0500 110C 0064 0001 0005 0000 0043 0000 0646 0002 060A 0000 1874 0000 03D8 0001 510C 0000 3300 0004 0000 0000 F26A 002B 0000 01CB 0000 
+> readc 0xA 20
+ (       R N G - C T R L - R V R 4 0         
+
+At 0xa is the Renogy device name, serial number etc.
+
+On the host database/Grafana side
+=================================
+
+recv_snapshot then receives pushed data from remote machine and
+places a copy of the data into a CSV file and into the database.
+
+all that is necessary is an account solar that is forced to run
+recv_snapshot program
+eg.
+
+Match User solar
+       X11Forwarding no
+       AllowTcpForwarding no
+       PermitTTY no
+       ForceCommand /usr/local/bin/recv_snapshot
+
+
+Database and Grafana
+====================
+
+I've used postgresql for the database but you can rework the code
+to use mysql.You'll need to modify recv_snapshot.c, update_database.c
+and csv2database.c
+
+Making pretty graphs is much easier with Grafana but even that is optional.
+

@@ -1,0 +1,3 @@
+> readc 0xA 20
+ (       R N G - C T R L - R V R 4 0         
+                                               d    x     

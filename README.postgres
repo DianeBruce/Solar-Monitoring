@@ -1,0 +1,71 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 11.19
+-- Dumped by pg_dump version 11.19
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: db_solar; Type: DATABASE; Schema: -; Owner: solar
+--
+
+CREATE DATABASE db_solar WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'C' LC_CTYPE = 'C';
+
+
+ALTER DATABASE db_solar OWNER TO solar;
+
+\connect db_solar
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: solar; Type: SCHEMA; Schema: -; Owner: pgsql
+--
+
+CREATE SCHEMA solar;
+
+
+ALTER SCHEMA solar OWNER TO pgsql;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: solar; Type: TABLE; Schema: public; Owner: solar
+--
+
+CREATE TABLE public.solar (
+    date_time timestamp without time zone,
+    array_v real,
+    array_a real,
+    array_w real,
+    soc integer,
+    bat_v real,
+    bat_a real,
+    load_v real,
+    load_a real
+);
+
+
+ALTER TABLE public.solar OWNER TO solar;
